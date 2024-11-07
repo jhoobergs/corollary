@@ -73,7 +73,7 @@ fn code_error(code: &str, tok_pos: usize) {
 }
 
 // Print out errors smartly
-pub fn print_parse_error(code: &str, err: &ParseError<usize, String, ()>) {
+pub fn print_parse_error(code: &str, err: &ParseError<usize, String, &'static str>) {
     match err {
         ParseError::InvalidToken { location: loc } => {
             println!("Error: Invalid token:");
