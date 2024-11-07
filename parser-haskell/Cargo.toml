@@ -9,12 +9,13 @@ description = "Parses Haskell into an AST."
 repository = "http://github.com/tcr/corrode-but-in-rust"
 homepage = "http://github.com/tcr/corrode-but-in-rust"
 license = "MIT/Apache-2.0"
+edition = "2021"
 
 [build-dependencies.lalrpop]
-version = "0.12.5"
+version = "0.22"
 
 [dependencies]
-lalrpop-util = "0.12.5"
-regex = "0.2.1"
-base64 = "0.5.2"
+lalrpop-util = {version = "0.22", features = ["lexer"] }
+regex = "1.11"
+base64 = "0.22"
 errln = "0.1.0"

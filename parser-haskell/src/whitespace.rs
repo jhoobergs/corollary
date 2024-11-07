@@ -1,6 +1,6 @@
 //! Reformat's Haskell's whitespace to use explicit braces and semicolons.
 
-use trans::{encode_literal};
+use crate::trans::encode_literal;
 use regex::{Captures, Regex};
 
 // TODO rename "strip comments and other stuff too i guess"
@@ -27,42 +27,44 @@ fn strip_comments(text: &str) -> String {
     // TODO this should be handled in the parser
     let escape_re = Regex::new(r#"\\([abfnrtv'"\\0]|NUL|ESC)"#).unwrap();
     let decode_escapes = |text: &str| {
-        let text = escape_re.replace_all(text, |caps: &Captures| {
-            match &caps[1] {
-                "a" => "\u{0007}",
-                "b" => "\u{0008}",
-                "f" => "\u{000C}",
-                "n" => "\n",
-                "r" => "\r",
-                "t" => "\t",
-                "v" => "\u{000B}",
-                "'" => "'",
-                "\"" => "\"",
-                "\\" => "\\",
-                "0" | "NUL" => "\0",
-                "ESC" => "\x1b",
-                s => panic!("str escape {}", s),
-            }.into()
+        let text = escape_re.replace_all(text, |caps: &Captures| match &caps[1] {
+            "a" => "\u{0007}",
+            "b" => "\u{0008}",
+            "f" => "\u{000C}",
+            "n" => "\n",
+            "r" => "\r",
+            "t" => "\t",
+            "v" => "\u{000B}",
+            "'" => "'",
+            "\"" => "\"",
+            "\\" => "\\",
+            "0" | "NUL" => "\0",
+            "ESC" => "\x1b",
+            s => panic!("str escape {}", s),
         });
         text.to_string()
     };
 
     // Char literals.
     let re = Regex::new(r"'([^'\\]|\\[A-Z]{1,3}|\\.)'").unwrap();
-    let text = re.replace_all(&text, |caps: &Captures| {
-        let v = decode_escapes(&caps[1]);
-        assert!(v.len() == 1, "multi char literal {:?}", v);
-        format!("'{}'", encode_literal(&v))
-    }).to_string();
+    let text = re
+        .replace_all(&text, |caps: &Captures| {
+            let v = decode_escapes(&caps[1]);
+            assert!(v.len() == 1, "multi char literal {:?}", v);
+            format!("'{}'", encode_literal(&v))
+        })
+        .to_string();
 
     // Replace all strings with an encoded version to make the parser simpler.
     // If its possible to get LALRPOP to not complain with proper string regexes, should just use
     // that instead
     let re = Regex::new(r#""(([^"\\]|\\.)*?)""#).unwrap();
-    let text = re.replace_all(&text, |caps: &Captures| {
-        let v = decode_escapes(&caps[1]);
-        format!("\"{}\"", encode_literal(&v))
-    }).to_string();
+    let text = re
+        .replace_all(&text, |caps: &Captures| {
+            let v = decode_escapes(&caps[1]);
+            format!("\"{}\"", encode_literal(&v))
+        })
+        .to_string();
 
     // Convert forall a b. to forall a b; for simpler parsing
     let re = Regex::new(r"forall\s+(.*?)\.").unwrap();
@@ -94,7 +96,7 @@ impl BlockWord {
             "in" => In,
             "if" => If,
             "then" => Then,
-            "else" => Else,   
+            "else" => Else,
             _ => return None,
         })
     }
@@ -149,20 +151,19 @@ pub fn commify(val: &str) -> String {
             let word = &cap[0];
 
             macro_rules! pop_brace {
-                () => ({
+                () => {{
                     popped = stash.pop();
                     braces.pop();
                     out.push_str("}");
-                });
+                }};
             }
 
-            // TODO why do we need to prevent `;} then` semicolon insertion here 
+            // TODO why do we need to prevent `;} then` semicolon insertion here
             if first && word != "then" {
                 while {
                     if let Some(&(last_level, last_word)) = stash.last() {
                         // Check if we decreased our indent level
-                        last_level > indent
-                            || (last_level == indent && word == "where")
+                        last_level > indent || (last_level == indent && word == "where")
                     } else {
                         false
                     }
@@ -216,7 +217,6 @@ pub fn commify(val: &str) -> String {
                 }
             }
 
-
             // make sure `if { ... } then` is closed
             if word == "then" {
                 // are we still in the `if`?
@@ -259,7 +259,6 @@ pub fn commify(val: &str) -> String {
     for _ in 0..stash.len() {
         out.push_str("}");
     }
-
 
     // Replace trailing commas after where statements
     // TODO fix this in the parser instead
